@@ -33,7 +33,7 @@
             </Grid.RowDefinitions>
             <GroupBox Padding="5">
 
-                <GroupBox.Header>Search for ticker</GroupBox.Header>
+                <GroupBox.Header>Search for ticker_bhavin</GroupBox.Header>
 
                 <Grid>
                     <Grid.ColumnDefinitions>
