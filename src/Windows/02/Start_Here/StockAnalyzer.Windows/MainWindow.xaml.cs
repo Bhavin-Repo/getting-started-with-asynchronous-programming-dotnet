@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Threading;
 using System.Windows;
 using System.Windows.Navigation;
 using Newtonsoft.Json;
@@ -18,8 +19,9 @@ namespace StockAnalyzer.Windows
             InitializeComponent();
         }
 
-        private void Search_Click(object sender, RoutedEventArgs e)
+        private async void Search_Click(object sender, RoutedEventArgs e)
         {
+            
             #region Before loading stock data
             var watch = new Stopwatch();
             watch.Start();
@@ -27,14 +29,8 @@ namespace StockAnalyzer.Windows
             StockProgress.IsIndeterminate = true;
             #endregion
 
-            var client = new WebClient();
-
-            var content = client.DownloadString($"http://localhost:61363/api/stocks/{Ticker.Text}");
-
-            var data = JsonConvert.DeserializeObject<IEnumerable<StockPrice>>(content);
-
-            Stocks.ItemsSource = data;
-
+            await GetStocks();
+            
             #region After stock data is loaded
             StocksStatus.Text = $"Loaded stocks for {Ticker.Text} in {watch.ElapsedMilliseconds}ms";
             StockProgress.Visibility = Visibility.Hidden;
@@ -52,5 +48,28 @@ namespace StockAnalyzer.Windows
         {
             Application.Current.Shutdown();
         }
+
+        public async Task GetStocks()
+        {
+            using (var client = new HttpClient())
+            {
+
+                var response = await client.GetAsync($"http://localhost:61363/api/stocks/{Ticker.Text}");
+                try
+                {
+                    response.EnsureSuccessStatusCode();
+                    var content = await response.Content.ReadAsStringAsync();
+
+                    var data = JsonConvert.DeserializeObject<IEnumerable<StockPrice>>(content);
+                    Stocks.ItemsSource = data;
+                }
+                catch (Exception ex)
+                {
+                    Notes.Text += ex.Message;
+                }
+            }
+
+        }
+
     }
 }
